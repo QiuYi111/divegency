@@ -93,7 +93,7 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(result["stats"]["distinct_prediction_signatures"], 2)
         self.assertEqual(result["stats"]["dead_ends"], 1)
 
-    def test_rename_with_same_predictions_is_flagged(self) -> None:
+    def test_exactly_renamed_mechanism_description_rejected(self) -> None:
         data = copy.deepcopy(SAMPLE)
         clone = copy.deepcopy(data["candidates"][0])
         clone["id"] = "C3"
@@ -101,7 +101,26 @@ class PortfolioTests(unittest.TestCase):
         clone["mechanism_key"] = "geometric-inversion"
         data["candidates"].append(clone)
         result = inspect(data)
-        self.assertTrue(any("换名" in x for x in result["errors"]))
+        self.assertTrue(any("相同机制描述" in x for x in result["errors"]))
+        self.assertTrue(any("无法区分" in x for x in result["warnings"]))
+
+    def test_equal_probe_outcomes_do_not_prove_same_mechanism(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        # Two genuine methods can both lose accuracy when a sectional view is removed.
+        data["candidates"][1]["predictions"]["P1"] = "down"
+        result = inspect(data)
+        self.assertEqual(result["errors"], [])
+        self.assertTrue(any("无法区分" in x for x in result["warnings"]))
+
+    def test_empty_predictions_rejected_when_probes_exist(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        data["candidates"][1]["predictions"] = {}
+        self.assertTrue(any("缺少判别问题" in x for x in inspect(data)["errors"]))
+
+    def test_partial_predictions_rejected_when_probes_exist(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        data["probes"].append({"id": "P2", "intervention": "换新图纸", "question": "误差是否增加"})
+        self.assertTrue(any("缺少判别问题" in x for x in inspect(data)["errors"]))
 
     def test_checked_without_quote_rejected(self) -> None:
         data = copy.deepcopy(SAMPLE)
@@ -130,10 +149,32 @@ class PortfolioTests(unittest.TestCase):
             result = inspect(data, root=root)
         self.assertFalse(any("不存在" in x for x in result["errors"]))
 
+    def test_directory_is_not_a_pass_artifact(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        data["candidates"][0]["verification"]["artifact"] = "."
+        with tempfile.TemporaryDirectory() as tmp:
+            result = inspect(data, root=Path(tmp))
+        self.assertTrue(any("不是文件" in x for x in result["errors"]))
+
     def test_finalists_need_bidirectional_witness(self) -> None:
         data = copy.deepcopy(SAMPLE)
         data["candidates"][1]["differentiation"] = []
-        self.assertTrue(any("双向判别" in x for x in inspect(data)["errors"]))
+        result = inspect(data)
+        self.assertEqual(result["errors"], [])
+        self.assertTrue(any("尚不能确认原理不同" in x for x in result["warnings"]))
+        self.assertEqual(result["stats"]["pairs_with_claimed_witness"], 0)
+
+    def test_direction_can_contribute_without_unique_candidate(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        data["directions"].append({"id": "D3", "lens": "跨领域验证"})
+        data["candidates"][0]["contributor_direction_ids"] = ["D3"]
+        result = inspect(data)
+        self.assertNotIn("D3", result["stats"]["uncovered_directions"])
+
+    def test_undefined_contributing_direction_rejected(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        data["candidates"][0]["contributor_direction_ids"] = ["D404"]
+        self.assertTrue(any("contributor_direction_ids" in x for x in inspect(data)["errors"]))
 
     def test_pass_without_checked_evidence_rejected(self) -> None:
         data = copy.deepcopy(SAMPLE)
@@ -182,6 +223,17 @@ class PortfolioTests(unittest.TestCase):
             root = Path(tmp)
             (root / "snap.txt").write_text("something else entirely", encoding="utf-8")
             self.assertTrue(any("逐字匹配" in x for x in inspect(data, root=root)["errors"]))
+
+    def test_missing_snapshot_warns_source_is_not_machine_checked(self) -> None:
+        result = inspect(copy.deepcopy(SAMPLE))
+        self.assertTrue(any("未提供 snapshot" in x for x in result["warnings"]))
+
+    def test_declared_snapshot_must_exist(self) -> None:
+        data = copy.deepcopy(SAMPLE)
+        data["sources"][0]["snapshot"] = "missing-source.txt"
+        with tempfile.TemporaryDirectory() as tmp:
+            result = inspect(data, root=Path(tmp))
+        self.assertTrue(any("snapshot 不存在" in x for x in result["errors"]))
 
     def test_snapshot_match_accepted(self) -> None:
         data = copy.deepcopy(SAMPLE)

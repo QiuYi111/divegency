@@ -137,12 +137,16 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
             if not filled(quote) or len(str(quote).strip()) < 8:
                 errors.append(f"{where}: checked=true 但缺少 quote（≥8 字的逐字原文）")
             snapshot = entry.get("snapshot")
-            if filled(snapshot) and root is not None:
+            if not filled(snapshot):
+                warnings.append(f"{where}: 未提供 snapshot，quote 仅为自述；需要复核者打开原文")
+            elif root is None:
+                warnings.append(f"{where}: 没有根目录，无法核验 snapshot")
+            else:
                 snap_path = Path(str(snapshot)).expanduser()
                 if not snap_path.is_absolute():
                     snap_path = root / snap_path
-                if not snap_path.exists():
-                    warnings.append(f"{where}: snapshot 不存在：{snapshot}")
+                if not snap_path.is_file():
+                    errors.append(f"{where}: snapshot 不存在或不是文件：{snapshot}")
                 elif filled(quote):
                     try:
                         haystack = normalize(snap_path.read_text(encoding="utf-8", errors="ignore"))
@@ -153,6 +157,7 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
 
     candidate_ids: set[str] = set()
     mechanism_groups: dict[str, list[str]] = defaultdict(list)
+    mechanism_descriptions: dict[str, list[tuple[str, str]]] = defaultdict(list)
     direction_to_mechanisms: dict[str, set[str]] = defaultdict(set)
     covered_directions: set[str] = set()
     documented_mechanisms: set[str] = set()
@@ -180,6 +185,13 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
         else:
             covered_directions.add(direction)
 
+        contributors = checked_list(entry.get("contributor_direction_ids", []), f"{where}.contributor_direction_ids", errors)
+        for contributor in contributors:
+            if not filled(contributor) or contributor not in direction_ids:
+                errors.append(f"{where}.contributor_direction_ids: 未定义方向 {contributor!r}")
+            else:
+                covered_directions.add(contributor)
+
         for field in ("summary", "mechanism", "mechanism_key"):
             if not filled(entry.get(field)):
                 errors.append(f"{where}.{field}: 必须填写")
@@ -189,6 +201,8 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
             mechanism_groups[family].append(key)
             if direction in direction_ids:
                 direction_to_mechanisms[direction].add(family)
+            if filled(entry.get("mechanism")):
+                mechanism_descriptions[normalize(entry["mechanism"]).casefold()].append((key, family))
 
         predictions = entry.get("predictions")
         if probes and not isinstance(predictions, dict):
@@ -197,6 +211,8 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
             if not isinstance(predictions, dict):
                 errors.append(f"{where}.predictions: 必须是对象")
             else:
+                for probe_id in probes.keys() - predictions.keys():
+                    errors.append(f"{where}.predictions: 缺少判别问题 {probe_id!r}；不确定请填 unknown")
                 for probe_id, value in predictions.items():
                     if probes and probe_id not in probes:
                         errors.append(f"{where}.predictions: 未定义判别问题 {probe_id!r}")
@@ -278,7 +294,9 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
                     pass_artifacts.append((key, str(artifact)))
                 elif not local.exists():
                     errors.append(f"{key}: artifact 指向不存在的文件：{artifact}")
-                elif local.is_file() and local.stat().st_size == 0:
+                elif not local.is_file():
+                    errors.append(f"{key}: artifact 不是文件：{artifact}")
+                elif local.stat().st_size == 0:
                     errors.append(f"{key}: artifact 是空文件：{artifact}")
                 else:
                     pass_artifacts.append((key, str(local.resolve())))
@@ -295,6 +313,9 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
     for family, ids in sorted(mechanism_groups.items()):
         if len(ids) > 1:
             warnings.append(f"同一机制标识 {family!r} 出现多次：{', '.join(ids)}；需人工核对是否重复")
+    for pairs in mechanism_descriptions.values():
+        if len({family for _, family in pairs}) > 1:
+            errors.append(f"{', '.join(cid for cid, _ in pairs)}: 相同机制描述却使用不同 mechanism_key；请修正记录或给出真正的机制差异")
     for family, ids in sorted(mechanism_groups.items()):
         if family in documented_mechanisms:
             thin = [cid for cid in ids if not checked_by_candidate.get(cid)]
@@ -307,6 +328,7 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
             warnings.append("多条研究方向只产出了同一机制族，建议重新设计下一轮方向")
 
     finalists = checked_list(data.get("finalists", []), "finalists", errors)
+    pairs_with_claimed_witness = 0
     if finalists:
         if len(finalists) < 2:
             warnings.append("finalists 少于两条，无法做两两判别")
@@ -324,7 +346,9 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
                             return True
                     return False
                 if not witness(first, second) or not witness(second, first):
-                    errors.append(f"finalists: {first} 与 {second} 缺少双向判别性观察，不能宣称原理不同")
+                    warnings.append(f"finalists: {first} 与 {second} 缺少双向判别性观察，尚不能确认原理不同；保留待判，不能计为已区分")
+                else:
+                    pairs_with_claimed_witness += 1
 
     by_artifact: dict[str, list[str]] = defaultdict(list)
     for candidate_id, artifact in pass_artifacts:
@@ -347,11 +371,11 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
             if len(ids) > 1:
                 families = {id_to_family.get(cid) for cid in ids}
                 if len(families) > 1:
-                    errors.append(f"同一预测签名 {signature} 却标为不同机制族：{', '.join(ids)}；这是换名，合并或补一条能分开的判别问题")
+                    warnings.append(f"同一预测签名 {signature} 涉及不同机制族：{', '.join(ids)}；现有探针无法区分，不能据此判为换名，应补更有区分力的测试")
                 else:
-                    warnings.append(f"同一预测签名 {signature}：{', '.join(ids)}；按同一族处理")
+                    warnings.append(f"同一预测签名 {signature}：{', '.join(ids)}；现有探针无法区分，但不构成机制相同的证明")
         if len(candidates) > 1 and len(signatures) < 2 and len(signatures) > 0:
-            warnings.append("所有候选在现有判别问题上签名相同，多样性不足")
+            warnings.append("所有候选在现有判别问题上签名相同；请设计新的区分实验，暂不增减机制族数")
 
     dead_ends = checked_list(data.get("dead_ends", []), "dead_ends", errors)
     for number, entry in enumerate(dead_ends, 1):
@@ -365,9 +389,6 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
 
     if len(candidate_ids) >= 3 and len(evidence_sources) == 1:
         warnings.append("所有候选只引用同一个来源，证据面可能过窄")
-    if data.get("budget") in {"standard", "deep"} and (len(direction_ids) < 3 or len(candidate_ids) < 3):
-        warnings.append("档位是 standard/deep，但方向或候选少于 3 个：先确认是问题真的窄，还是覆盖不足")
-
     stats = {
         "directions": len(direction_ids),
         "covered_directions": len(covered_directions),
@@ -377,6 +398,7 @@ def inspect(data: Any, root: Path | None = None) -> dict[str, Any]:
         "families_with_checked_primary_evidence": len(documented_mechanisms),
         "families_claiming_passed_tests": len(claimed_pass_mechanisms),
         "distinct_prediction_signatures": len(signatures) if probes else 0,
+        "pairs_with_claimed_witness": pairs_with_claimed_witness,
         "dead_ends": len(dead_ends),
     }
     return {"errors": errors, "warnings": warnings, "stats": stats}
