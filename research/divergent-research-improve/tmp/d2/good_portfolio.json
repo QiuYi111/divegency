@@ -1,0 +1,114 @@
+{
+  "goal": "提高工程图转三维模型的成功率",
+  "mode": "algorithm",
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "几何约束"
+    },
+    {
+      "id": "D2",
+      "lens": "视觉重建"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "https://example.org/constraint-paper",
+      "kind": "primary",
+      "checked": true,
+      "where": "§3.2 第 2 段",
+      "quote": "the system is under-determined whenever only two orthographic views are given"
+    },
+    {
+      "id": "S2",
+      "locator": "https://example.org/sfm",
+      "kind": "primary",
+      "checked": false
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "约束求解",
+      "mechanism": "欠定约束系统求解",
+      "mechanism_key": "constraint-solve",
+      "differentiation": [
+        {
+          "vs": "C2",
+          "witness": "只给主视图+剖视图时，C1 预测无解，C2 预测可给出近似体",
+          "falsifier": "两者在该输入上都失败则视为同一机制"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "两视图欠定"
+        }
+      ],
+      "assumptions": [
+        "视图完整"
+      ],
+      "failure_cases": [
+        "缺剖视"
+      ],
+      "verification": {
+        "method": "held-out 50 张",
+        "criterion": "成功率≥基线",
+        "result": "pass",
+        "artifact": "runs/r1.json",
+        "evaluator": "independent",
+        "frozen": "sha256:9f2c",
+        "n_runs": 3,
+        "raw": [
+          0.61,
+          0.63,
+          0.6
+        ],
+        "claim": "在保留集上与基线持平"
+      }
+    },
+    {
+      "id": "C2",
+      "direction_id": "D2",
+      "summary": "视觉重建",
+      "mechanism": "多视图神经重建",
+      "mechanism_key": "neural-recon",
+      "differentiation": [
+        {
+          "vs": "C1",
+          "witness": "同一输入上 C2 给出近似体而非报错",
+          "falsifier": "两者在该输入上都失败则视为同一机制"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S2",
+          "supports": "多视图可恢复"
+        }
+      ],
+      "assumptions": [
+        "图像清晰"
+      ],
+      "failure_cases": [
+        "线宽不一致"
+      ],
+      "verification": {
+        "method": "held-out 50 张",
+        "criterion": "成功率≥基线",
+        "result": "fail",
+        "artifact": "runs/r2.json",
+        "evaluator": "independent",
+        "frozen": "sha256:9f2c",
+        "n_runs": 3,
+        "raw": [
+          0.4,
+          0.38,
+          0.41
+        ],
+        "claim": "低于基线"
+      }
+    }
+  ]
+}

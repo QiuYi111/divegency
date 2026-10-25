@@ -1,0 +1,77 @@
+{
+  "goal": "把工程图转三维模型的成功率从 60% 提到 85%",
+  "mode": "design",
+  "probes": [
+    {
+      "id": "P1",
+      "intervention": "把输入图纸的视图顺序随机打乱",
+      "question": "成功率是否下降超过 5 个百分点"
+    },
+    {
+      "id": "P2",
+      "intervention": "删掉全部尺寸标注只留视图几何",
+      "question": "是否仍能重建出可用的实体"
+    },
+    {
+      "id": "P3",
+      "intervention": "额外提供一张同零件的照片",
+      "question": "成功率是否显著上升"
+    },
+    {
+      "id": "P4",
+      "intervention": "把可用的训练样本减半",
+      "question": "成功率是否下降超过 5 个百分点"
+    },
+    {
+      "id": "P5",
+      "intervention": "把推理预算（时间）提高十倍",
+      "question": "成功率是否上升超过 5 个百分点"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "claimed_cause": "用几何约束求解器从视图反推尺寸，约束不完备时退化",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "degrade",
+        "P3": "improve",
+        "P4": "no-change",
+        "P5": "no-change"
+      }
+    },
+    {
+      "id": "C2",
+      "claimed_cause": "先建约束图再交给通用求解器反推尺寸并修复过约束",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "degrade",
+        "P3": "improve",
+        "P4": "no-change",
+        "P5": "no-change"
+      }
+    },
+    {
+      "id": "C3",
+      "claimed_cause": "多视图视觉重建，靠视角数量而非标注",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "degrade",
+        "P3": "improve",
+        "P4": "degrade",
+        "P5": "no-change"
+      }
+    },
+    {
+      "id": "C4",
+      "claimed_cause": "程序搜索枚举建模序列，靠搜索预算换成功率",
+      "predictions": {
+        "P1": "degrade",
+        "P2": "unknown",
+        "P3": "no-change",
+        "P4": "no-change",
+        "P5": "improve"
+      }
+    }
+  ]
+}

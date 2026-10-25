@@ -1,0 +1,235 @@
+{
+  "goal": "在给定预算内为 X 光片骨抑制任务选出一条可复现、可判别的算法路线，并说明其失败条件。",
+  "mode": "algorithm",
+  "budget": "standard",
+  "probes": [
+    {
+      "id": "P1",
+      "intervention": "把训练集顺序整体打乱后重跑",
+      "question": "核心指标是否下降超过 5 个百分点"
+    },
+    {
+      "id": "P2",
+      "intervention": "删除 30% 输入通道",
+      "question": "指标是否出现不重叠的下降"
+    },
+    {
+      "id": "P3",
+      "intervention": "换到分布外医院数据集",
+      "question": "指标是否仍高于基线"
+    }
+  ],
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "先问这个任务在数学上属于哪类逆问题，再从该结构出发",
+      "axis": "问题描述"
+    },
+    {
+      "id": "D2",
+      "lens": "完全自由探索，允许偏离医学影像的常规做法",
+      "axis": "无预设"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "https://arxiv.org/abs/9999.99999",
+      "kind": "primary",
+      "checked": true,
+      "where": "§4.2",
+      "quote": "我们的方法在全部基准上取得了一致的提升"
+    },
+    {
+      "id": "S2",
+      "locator": "experiments/rerun.log",
+      "kind": "experiment",
+      "checked": true,
+      "where": "第 12 行",
+      "quote": "final accuracy 0.913 vs baseline 0.874"
+    },
+    {
+      "id": "S3",
+      "locator": "https://doi.org/10.9999/fake.2024",
+      "kind": "secondary",
+      "checked": true,
+      "where": "摘要",
+      "quote": "该方向近年被认为已经饱和，不再值得投入"
+    }
+  ],
+  "dead_ends": [
+    {
+      "route": "纯端到端回归",
+      "why": "缺视图样本上误差爆炸",
+      "evidence": "runs/e2e.log"
+    },
+    {
+      "route": "直接套用 GAN 去噪",
+      "why": "伪影不可控，放射科不接受",
+      "evidence": "runs/gan.log"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "先跑基线求解器，再按残差做一次性缩放校准。",
+      "mechanism": "先跑基线求解器，估计其输出与真值的系统性偏差，用一个通道向量把残差拉回，不改动求解器内部结构。",
+      "mechanism_key": "residual-calibration",
+      "predictions": {
+        "P1": "down",
+        "P2": "down",
+        "P3": "no-change"
+      },
+      "differentiation": [
+        {
+          "vs": "C2",
+          "observation": "在全部三个公开数据集上，C1 与 C2 的成功率差距都落在 ±1 个百分点内，预测方向相同",
+          "prediction_self": "up",
+          "prediction_other": "up"
+        },
+        {
+          "vs": "C3",
+          "observation": "仅给出主视图输入时，C1 输出与基线逐像素相同，C3 会额外改变边缘 3 个像素",
+          "prediction_self": "no-change",
+          "prediction_other": "down"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "残差校准在四个基准上均有一致提升",
+          "where": "§4.2"
+        },
+        {
+          "source_id": "S2",
+          "supports": "本轮重跑中校准后指标高于基线 3.9pp",
+          "where": "第 12 行"
+        }
+      ],
+      "assumptions": [
+        "基线误差是系统性的、可用标量近似"
+      ],
+      "failure_cases": [
+        "基线在某些切片上过曝时，校准会放大伪影"
+      ],
+      "verification": {
+        "method": "同一批 500 例上做对照测试",
+        "criterion": "同一输入下成功率高于基线 3pp",
+        "result": "pass",
+        "artifact": "https://example.org/runs/run.log",
+        "evaluator": "independent",
+        "rerun": "python run.py --seed 1"
+      }
+    },
+    {
+      "id": "C2",
+      "direction_id": "D1",
+      "summary": "对基线输出做分布对齐，使输出统计量与真值分布一致。",
+      "mechanism": "估计基线输出的均值与方差，用线性变换匹配真值统计量，使输出分布与目标域一致。",
+      "mechanism_key": "distribution-alignment",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "down",
+        "P3": "down"
+      },
+      "differentiation": [
+        {
+          "vs": "C1",
+          "observation": "在全部三个公开数据集上，C2 与 C1 的成功率差距都落在 ±1 个百分点内，预测方向相同",
+          "prediction_self": "up",
+          "prediction_other": "up"
+        },
+        {
+          "vs": "C3",
+          "observation": "把输入对比度整体减半时，C2 的输出分布随之平移，C3 不变",
+          "prediction_self": "down",
+          "prediction_other": "no-change"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "分布级校准与残差校准报告了同一组提升数字",
+          "where": "§4.2"
+        },
+        {
+          "source_id": "S2",
+          "supports": "同一份重跑日志同时支持两种命名",
+          "where": "第 12 行"
+        }
+      ],
+      "assumptions": [
+        "真值分布可在无标签的测试域上估计"
+      ],
+      "failure_cases": [
+        "目标域分布偏移超过线性范围时失效"
+      ],
+      "verification": {
+        "method": "同一批 500 例上做对照测试",
+        "criterion": "同一输入下成功率高于基线 3pp",
+        "result": "pass",
+        "artifact": "https://example.org/runs/run.log",
+        "evaluator": "independent",
+        "rerun": "python run.py --seed 1"
+      }
+    },
+    {
+      "id": "C3",
+      "direction_id": "D2",
+      "summary": "在推理端加一个轻量误差补偿头，按经验偏差查表修正。",
+      "mechanism": "按切片类型查表，从基线输出中减去该类型的历史平均偏差，推理端完成，无需重训。",
+      "mechanism_key": "empirical-bias-compensation",
+      "predictions": {
+        "P1": "down",
+        "P2": "no-change",
+        "P3": "no-change"
+      },
+      "differentiation": [
+        {
+          "vs": "C1",
+          "observation": "仅给出主视图输入时，C1 输出与基线逐像素相同，C3 会额外改变边缘 3 个像素",
+          "prediction_self": "no-change",
+          "prediction_other": "no-change"
+        },
+        {
+          "vs": "C2",
+          "observation": "把输入对比度整体减半时，C2 的输出分布随之平移，C3 不变",
+          "prediction_self": "no-change",
+          "prediction_other": "no-change"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "查表式补偿与残差校准共享同一提升来源",
+          "where": "§4.2"
+        },
+        {
+          "source_id": "S3",
+          "supports": "该方向已被认为饱和，故只做最小改动",
+          "where": "摘要"
+        }
+      ],
+      "assumptions": [
+        "切片类型的先验偏差在训练集与测试集同分布"
+      ],
+      "failure_cases": [
+        "新设备采集的切片没有对应表项时退化为基线"
+      ],
+      "verification": {
+        "method": "同一批 500 例上做对照测试",
+        "criterion": "同一输入下成功率高于基线 3pp",
+        "result": "pass",
+        "artifact": "https://example.org/runs/run.log",
+        "evaluator": "independent",
+        "rerun": "python run.py --seed 1"
+      }
+    }
+  ],
+  "finalists": [
+    "C1",
+    "C2",
+    "C3"
+  ]
+}

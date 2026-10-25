@@ -1,0 +1,91 @@
+{
+  "goal": "比较三种缓存一致性方案",
+  "mode": "design",
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "从一致性协议数学出发"
+    },
+    {
+      "id": "D2",
+      "lens": "从硬件缓存层级出发"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "https://example.org/paper-a",
+      "kind": "primary",
+      "checked": true
+    },
+    {
+      "id": "S2",
+      "locator": "https://example.org/paper-b",
+      "kind": "primary",
+      "checked": true,
+      "anchors": [
+        {
+          "locator": "§3.2, p.7",
+          "quote": "在 8 路组相联下，写失效延迟下降 23%",
+          "supports": "支持写失效优于写更新"
+        }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "写失效",
+      "mechanism": "同步无效广播",
+      "mechanism_key": "invalidate",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "协议可行"
+        }
+      ],
+      "assumptions": [
+        "广播可靠"
+      ],
+      "failure_cases": [
+        "分区"
+      ],
+      "verification": {
+        "method": "模拟",
+        "criterion": "延迟低于基线",
+        "result": "pass",
+        "artifact": "runs/missing_c1.log"
+      }
+    },
+    {
+      "id": "C2",
+      "direction_id": "D2",
+      "summary": "目录式无效",
+      "mechanism": "目录跟踪写者",
+      "mechanism_key": "directory-invalidate",
+      "evidence": [
+        {
+          "source_id": "S2",
+          "supports": "目录开销可接受"
+        }
+      ],
+      "assumptions": [
+        "目录可扩展"
+      ],
+      "failure_cases": [
+        "目录热点"
+      ],
+      "verification": {
+        "method": "模拟",
+        "criterion": "延迟低于基线",
+        "result": "pass",
+        "artifact": "runs/missing_c2.log"
+      }
+    }
+  ],
+  "finalists": [
+    "C1",
+    "C2"
+  ]
+}

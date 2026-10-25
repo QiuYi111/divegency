@@ -1,0 +1,49 @@
+{
+ "versions": {
+  "python-jose": "3.5.0",
+  "PyJWT": "2.15.1"
+ },
+ "der_len": 270,
+ "rows": [
+  [
+   "python-jose / DER 公钥作 HMAC secret / algorithms=['HS256']",
+   "ACCEPT",
+   ""
+  ],
+  [
+   "python-jose / DER 公钥 / algorithms=None",
+   "ACCEPT",
+   ""
+  ],
+  [
+   "python-jose / PEM 公钥作 HMAC secret / algorithms=['HS256']",
+   "REJECT",
+   "JWKError: The specified key is an asymmetric key or x509 certificate and should not be used as an HMAC secret."
+  ],
+  [
+   "PyJWT / DER 公钥作 HMAC secret / algorithms=['HS256']",
+   "ACCEPT",
+   ""
+  ],
+  [
+   "PyJWT / DER 公钥 / 未传 algorithms",
+   "REJECT",
+   "DecodeError: It is required that you pass in a value for the \"algorithms\" argument when calling decode()."
+  ],
+  [
+   "PyJWT / PEM 公钥作 HMAC secret / algorithms=['HS256']",
+   "REJECT",
+   "InvalidKeyError: The specified key is an asymmetric key or x509 certificate and should not be used as an HMAC secret."
+  ],
+  [
+   "python-jose / alg=none 伪造 / algorithms=None",
+   "REJECT",
+   "JWKError: Unable to find an algorithm for key"
+  ],
+  [
+   "PyJWT / alg=none 伪造 / 未传 algorithms",
+   "REJECT",
+   "DecodeError: It is required that you pass in a value for the \"algorithms\" argument when calling decode()."
+  ]
+ ]
+}

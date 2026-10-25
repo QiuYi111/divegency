@@ -1,0 +1,4 @@
+interface:
+  display_name: "分路研究"
+  short_description: "多路独立研究、主动补搜盲点，并用证据和测试选出方案"
+  default_prompt: "用 $divergent-research 从不同方向独立研究这个问题，补齐未探索的路线，并验证最可行的方案。"

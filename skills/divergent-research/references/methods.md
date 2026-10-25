@@ -11,4 +11,12 @@
 - [ARIS Idea Discovery](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/tree/main/skills/idea-discovery)：查新、批评、用小规模实验筛掉无效想法。对算法研究很有参考价值，通用工程任务须改实验方法。
 - [Agent4Sci 论文](https://arxiv.org/html/2610.28763v1) / [代码](https://github.com/maszhongming/agent4sci)：发现 Agent 易将常见调参当作创新、闲置计算资源，并在取得一点进展后陷入局部优化。作者实际发布的三个 Skill 是 [research](https://github.com/maszhongming/agent4sci/blob/main/agent4sci/skills/agents/skills/research/SKILL.md)、[experiment](https://github.com/maszhongming/agent4sci/blob/main/agent4sci/skills/agents/skills/experiment/SKILL.md)、[checklist](https://github.com/maszhongming/agent4sci/blob/main/agent4sci/skills/agents/skills/checklist/SKILL.md)。它们分别规定研究资料的起点、实验登记与失败排查、定期发现搜索方向变窄；Claude 版本的定时提醒由[工具钩子](https://github.com/maszhongming/agent4sci/blob/main/agent4sci/skills/claude/hooks/reminder.sh)触发，单纯写进 Skill 的“每小时检查”并不会自动定时。作者的四路资料搜索按领域 × 技术部位分工，**不同于**我们要求的“各路独立完成完整方案”；我们只借鉴其知识来源覆盖与纠偏办法。论文还通过隐藏测试与独立审查限制选择性报告、测试信息泄露和评分规则修改。它验证的是单 Agent、特定基准上的**整组三个 Skill**，不能据此单独归因或声称本多 Agent Skill 的效果已被证实。
 
-本 Skill 的核心选择：**相同的完整目标 + 不同且宽泛的搜索起点 + 首轮相互隔离 + 后续按缺口补搜 + 可复查的证据与实验**。子 Agent 自由选择具体做法，不被一套固定解题步骤限制。
+## 证据边界（2026-10 复核）
+
+- 多 Agent 辩论类方法在算力对齐后**经常不优于** self-consistency 等单 Agent 基线（[2311.17371](https://arxiv.org/abs/2311.17371)、[2502.08788](https://arxiv.org/abs/2502.08788)）；**模型／来源的异质性是较稳定的增益来源**。因此本 Skill 不把“多派 Agent”当收益来源，只把异质起点与会失败的验证当收益来源。
+- 多 Agent 系统的大量失败集中在规格与验证两类，典型形态是“所有验证轮次都通过、产物仍然错”（[MAST, 2503.13657](https://arxiv.org/abs/2503.13657)）。因此“已验证”要求会失败、要求判定者带来新东西。
+- 没有外部反馈时，模型自我复核可能**降低**准确率（[2310.01798](https://arxiv.org/abs/2310.01798)），评审还存在位置、长度与自我偏好偏差（[2306.05685](https://arxiv.org/abs/2306.05685)）。因此自我复核不算验证。
+- “LLM 输出同质化”的证据仍有争议（对照 [2609.33936](https://arxiv.org/abs/2609.33936)）。保留首轮隔离的理由是**防止判断因看到同伴结论而漂移**（[2609.04445](https://arxiv.org/abs/2609.04445)），不是“防止模型趋同”。
+- 以上为设计依据，不是本 Skill 效果的因果证据；本 Skill 尚未做多模型对照实验。
+
+本 Skill 的核心选择：**相同的完整目标 + 不同且宽泛的搜索起点 + 首轮相互隔离 + 可判别的去重 + 可失败的验证 + 可复查的证据**。子 Agent 自由选择具体做法，不被一套固定解题步骤限制。

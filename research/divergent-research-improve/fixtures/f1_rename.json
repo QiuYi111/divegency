@@ -1,0 +1,134 @@
+{
+  "goal": "在给定数据集上提高零件三维重建成功率",
+  "mode": "algorithm",
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "从几何约束出发",
+      "axis": "信息来源"
+    },
+    {
+      "id": "D2",
+      "lens": "从视觉重建出发",
+      "axis": "信息来源"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "https://example.org/paper",
+      "kind": "primary",
+      "checked": true
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "候选 1",
+      "mechanism": "通过约束传播与局部优化逐步补全缺失几何",
+      "mechanism_key": "constraint-solver",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": ""
+        }
+      ],
+      "assumptions": [
+        "图纸给出足够视图"
+      ],
+      "failure_cases": [
+        "严重遮挡"
+      ],
+      "verification": {
+        "method": "跑了一遍",
+        "criterion": "",
+        "result": "pass",
+        "artifact": "我实际跑过，效果更好",
+        "evaluator": "self"
+      }
+    },
+    {
+      "id": "C2",
+      "direction_id": "D2",
+      "summary": "候选 2",
+      "mechanism": "通过约束传播与局部优化逐步补全缺失几何",
+      "mechanism_key": "geometric-inversion",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": ""
+        }
+      ],
+      "assumptions": [
+        "图纸给出足够视图"
+      ],
+      "failure_cases": [
+        "严重遮挡"
+      ],
+      "verification": {
+        "method": "跑了一遍",
+        "criterion": "",
+        "result": "pass",
+        "artifact": "我实际跑过，效果更好",
+        "evaluator": "self"
+      }
+    },
+    {
+      "id": "C3",
+      "direction_id": "D1",
+      "summary": "候选 3",
+      "mechanism": "通过约束传播与局部优化逐步补全缺失几何",
+      "mechanism_key": "program-search",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": ""
+        }
+      ],
+      "assumptions": [
+        "图纸给出足够视图"
+      ],
+      "failure_cases": [
+        "严重遮挡"
+      ],
+      "verification": {
+        "method": "跑了一遍",
+        "criterion": "",
+        "result": "pass",
+        "artifact": "我实际跑过，效果更好",
+        "evaluator": "self"
+      }
+    },
+    {
+      "id": "C4",
+      "direction_id": "D2",
+      "summary": "候选 4",
+      "mechanism": "通过约束传播与局部优化逐步补全缺失几何",
+      "mechanism_key": "visual-hull",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": ""
+        }
+      ],
+      "assumptions": [
+        "图纸给出足够视图"
+      ],
+      "failure_cases": [
+        "严重遮挡"
+      ],
+      "verification": {
+        "method": "跑了一遍",
+        "criterion": "",
+        "result": "pass",
+        "artifact": "我实际跑过，效果更好",
+        "evaluator": "self"
+      }
+    }
+  ],
+  "finalists": [
+    "C1",
+    "C2"
+  ]
+}
