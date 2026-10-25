@@ -1,0 +1,55 @@
+{
+  "goal": "提高工程图转三维模型的成功率",
+  "mode": "algorithm",
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "几何约束"
+    },
+    {
+      "id": "D2",
+      "lens": "程序搜索"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "https://example.org/paper",
+      "kind": "primary",
+      "checked": true
+    },
+    {
+      "id": "S2",
+      "locator": "https://example.org/spec",
+      "kind": "primary",
+      "checked": true
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "约束求解",
+      "mechanism": "把视图当方程组",
+      "mechanism_key": "constraint",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "约束可解"
+        }
+      ],
+      "assumptions": [
+        "图纸完整"
+      ],
+      "failure_cases": [
+        "缺剖视图"
+      ],
+      "verification": {
+        "method": "对照",
+        "criterion": "成功率更高",
+        "result": "pass",
+        "artifact": "runs/e1.log"
+      }
+    }
+  ]
+}

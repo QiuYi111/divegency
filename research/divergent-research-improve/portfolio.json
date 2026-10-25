@@ -1,0 +1,345 @@
+{
+  "goal": "提升 divergent-research Skill：让遵循它的 Agent 产出更多原理不同、有据可查、可检验的候选，同时难以用换名、分工、伪造通过来冒充多路研究",
+  "mode": "design",
+  "budget": "deep",
+  "probes": [
+    {
+      "id": "P1",
+      "intervention": "删去一条已核实来源的 where 与 quote",
+      "question": "检查器是否报错并把它降为未核实"
+    },
+    {
+      "id": "P2",
+      "intervention": "把同一机制改名为两条候选",
+      "question": "归族或审计能否发现"
+    },
+    {
+      "id": "P3",
+      "intervention": "在只有一个上下文的宿主上执行",
+      "question": "是否仍有可出示的隔离产物且不谎称并行"
+    },
+    {
+      "id": "P4",
+      "intervention": "把自测结果写成“已证明优于基线”",
+      "question": "规则或检查器是否拦住"
+    }
+  ],
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "实证证据：多 Agent 在哪失效、哪些干预有证据",
+      "axis": "证据来源"
+    },
+    {
+      "id": "D2",
+      "lens": "把 Skill 当作 LLM 解释执行的程序",
+      "axis": "协议结构"
+    },
+    {
+      "id": "D3",
+      "lens": "搜索覆盖与预算分配的数学",
+      "axis": "搜索机制"
+    },
+    {
+      "id": "D4",
+      "lens": "执行者与审计者的成本结构",
+      "axis": "激励结构"
+    },
+    {
+      "id": "D5",
+      "lens": "真实使用条件与成本",
+      "axis": "使用场景"
+    },
+    {
+      "id": "D6",
+      "lens": "无预设自由探索",
+      "axis": "无预设"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "https://arxiv.org/abs/2607.22375",
+      "kind": "primary",
+      "checked": true,
+      "where": "abstract",
+      "quote": "IDEAgent: Agentic Quality-Diversity Search for Research Idea Generation"
+    },
+    {
+      "id": "S2",
+      "locator": "https://arxiv.org/html/2610.28763v1",
+      "kind": "primary",
+      "checked": true,
+      "where": "abstract",
+      "quote": "novelty miscalibration, resource under-utilization, and rapid collapse into local engineering sweeps"
+    },
+    {
+      "id": "S3",
+      "locator": "https://arxiv.org/abs/2503.13657",
+      "kind": "primary",
+      "checked": false
+    },
+    {
+      "id": "S4",
+      "locator": "https://arxiv.org/abs/2502.08788",
+      "kind": "primary",
+      "checked": false
+    },
+    {
+      "id": "S5",
+      "locator": "research/divergent-research-improve/evidence/checks.txt",
+      "kind": "experiment",
+      "checked": true,
+      "where": "E1/E2",
+      "quote": "old exit=0 / new exit=2 / new errors: 7-11"
+    }
+  ],
+  "dead_ends": [
+    {
+      "route": "向量或字符相似度做机制去重",
+      "why": "字符 3-gram 在中文机制短句上无区分度（真改写 0.132 vs 异机制 0.150），embedding 违反仅标准库约束",
+      "evidence": "tracks/D3.md §5.4"
+    },
+    {
+      "route": "哈希链防篡改日志",
+      "why": "执行者即记录者，可整链重算，还给审计者虚假安全感",
+      "evidence": "tracks/D4.md §7"
+    },
+    {
+      "route": "强制不同底座模型",
+      "why": "宿主常只有一个模型，不可执行且诱导假称异质",
+      "evidence": "tracks/D1.md §6"
+    },
+    {
+      "route": "每条路线强制最小实验",
+      "why": "facts/decision 无实验台；quick 超预算；拦不住空文件式伪造",
+      "evidence": "tracks/D6.md §1.1"
+    },
+    {
+      "route": "split phases into separate reference files",
+      "why": "第三级披露是模型自选读不读，会把检查变成新的可选决策点；判定必须内联",
+      "evidence": "tracks/D2.md §6"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "会失败的验证：可重跑＋会失败＋判定者带来新东西；措辞随等级",
+      "mechanism": "把“已验证”从声明改成三项可出示条件；只查形式的检查在结论错时也通过，因此不算验证",
+      "mechanism_key": "falsifiable-verification",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "no-change",
+        "P3": "no-change",
+        "P4": "up"
+      },
+      "differentiation": [
+        {
+          "vs": "C2",
+          "observation": "同一份未跑过但字段齐全的方案库",
+          "prediction_self": "判为未验证，拒绝“已证明”措辞",
+          "prediction_other": "字段齐全即通过结构检查"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S3",
+          "supports": "验证轮次全过仍可能错"
+        },
+        {
+          "source_id": "S4",
+          "supports": "同质多路增益有限"
+        },
+        {
+          "source_id": "S5",
+          "supports": "新检查器能拦住伪造 pass"
+        }
+      ],
+      "assumptions": [
+        "存在可施加的干预或对照输入"
+      ],
+      "failure_cases": [
+        "facts 模式没有干预台，只能退化为资料层对照"
+      ],
+      "verification": {
+        "method": "在三个伪造方案库上对比新旧检查器",
+        "criterion": "旧版 exit 0 的库，新版 exit 2",
+        "result": "pass",
+        "artifact": "evidence/checks.txt",
+        "evaluator": "self",
+        "rerun": "bash evidence/checks.txt 中的命令"
+      }
+    },
+    {
+      "id": "C2",
+      "direction_id": "D2",
+      "summary": "原文锚点＋artifact 必须存在＋pass 需已核实证据",
+      "mechanism": "把自报布尔换成诚实执行时顺手产生、伪造需凭空发明的残渣（引文、真实文件）",
+      "mechanism_key": "residue-not-claims",
+      "predictions": {
+        "P1": "up",
+        "P2": "no-change",
+        "P3": "no-change",
+        "P4": "no-change"
+      },
+      "differentiation": [
+        {
+          "vs": "C1",
+          "observation": "同一条 checked=true 但从未打开原文的记录",
+          "prediction_self": "因缺 where/quote 直接报错",
+          "prediction_other": "只在跑测试时才可能发现"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S5",
+          "supports": "缺锚点与缺 artifact 均由单测固定"
+        },
+        {
+          "source_id": "S2",
+          "supports": "自我叙述可貌似合理却误导"
+        }
+      ],
+      "assumptions": [
+        "引用可按 locator 被第三方抽查"
+      ],
+      "failure_cases": [
+        "引文仍可编造，只能提高成本，不能证明真伪"
+      ],
+      "verification": {
+        "method": "单测 checked 缺 quote/where 与 artifact 不存在",
+        "criterion": "均报错",
+        "result": "pass",
+        "artifact": "evidence/checks.txt",
+        "evaluator": "self",
+        "rerun": "python3 -m unittest test_check_portfolio"
+      }
+    },
+    {
+      "id": "C3",
+      "direction_id": "D3",
+      "summary": "判别问题＋预测签名归族＋主张不同者举证（合并 D3 的签名与 D6 的举证倒置）",
+      "mechanism": "归族改为第三方可重算的签名；同一签名即同族，换名无效",
+      "mechanism_key": "probe-signature",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "up",
+        "P3": "no-change",
+        "P4": "no-change"
+      },
+      "differentiation": [
+        {
+          "vs": "C2",
+          "observation": "两条候选机制文本不同但在全部判别问题上预测相同",
+          "prediction_self": "并为一族并要求补可分开的观察",
+          "prediction_other": "仍算两族"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "质量-多样性档案按族保留而非按名字"
+        },
+        {
+          "source_id": "S5",
+          "supports": "同签名与 finalists 缺反向观察均报警"
+        }
+      ],
+      "assumptions": [
+        "能写出 2–4 条可施加的判别问题"
+      ],
+      "failure_cases": [
+        "facts 模式探针弱；签名可被策略性填写，需复核者回测"
+      ],
+      "verification": {
+        "method": "构造同签名换名夹具与缺反向 witness 的 finalists",
+        "criterion": "检查器分别报警/报错",
+        "result": "pass",
+        "artifact": "evidence/checks.txt",
+        "evaluator": "self",
+        "rerun": "python3 -m unittest test_check_portfolio"
+      }
+    },
+    {
+      "id": "C4",
+      "direction_id": "D4",
+      "summary": "成本结构：事前只锁三样、交付上限、零新机制合法、审计三探针",
+      "mechanism": "让说谎比干活贵：只采信可复制的残渣，事后补写必须标注并降权",
+      "mechanism_key": "cost-inversion",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "up",
+        "P3": "no-change",
+        "P4": "up"
+      },
+      "differentiation": [
+        {
+          "vs": "C1",
+          "observation": "同一份自称独立的评测记录",
+          "prediction_self": "审计按引文抽查发现未读原文",
+          "prediction_other": "只看可重跑会放过"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S2",
+          "supports": "Agent 的过程叙述可能貌似合理却误导"
+        }
+      ],
+      "assumptions": [
+        "审计者可打开原始来源且抽检条目临时决定"
+      ],
+      "failure_cases": [
+        "改写抄袭与整份日志重写测不到"
+      ],
+      "verification": {
+        "method": "未独立运行",
+        "criterion": "审计者 10 分钟内发现至少一处伪造",
+        "result": "not-run",
+        "artifact": "",
+        "evaluator": "self"
+      }
+    },
+    {
+      "id": "C5",
+      "direction_id": "D5",
+      "summary": "分路前三问＋视角×预算表＋L1/L2/L3 降级＋RUN.md 断点",
+      "mechanism": "把是否启动、预算与降级变成可判定入口和有名字的合法路径，避免用假称并行来满足规则",
+      "mechanism_key": "entry-and-degrade",
+      "predictions": {
+        "P1": "no-change",
+        "P2": "no-change",
+        "P3": "up",
+        "P4": "no-change"
+      },
+      "differentiation": [
+        {
+          "vs": "C4",
+          "observation": "同一个只有单上下文的宿主场景",
+          "prediction_self": "给出 L3 密封串行产物与污染路径",
+          "prediction_other": "只写一句独立性免责声明"
+        }
+      ],
+      "evidence": [
+        {
+          "source_id": "S5",
+          "supports": "规则可执行性由 V1 走查复核"
+        }
+      ],
+      "assumptions": [
+        "用户能给一个十分钟级小任务做走查"
+      ],
+      "failure_cases": [
+        "quick 是否真能十分钟内完成，未做对照实验"
+      ],
+      "verification": {
+        "method": "复核轮 V1 走查",
+        "criterion": "新 Agent 能按 quick 产出 RUN.md 与 2 个视角",
+        "result": "not-run",
+        "artifact": "",
+        "evaluator": "independent"
+      }
+    }
+  ]
+}

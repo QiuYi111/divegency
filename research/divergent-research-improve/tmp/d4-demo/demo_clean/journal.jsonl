@@ -1,0 +1,7 @@
+{"seq":1,"event":"dispatch","track":"D1"}
+{"seq":2,"event":"dispatch","track":"D2"}
+{"seq":3,"event":"submit","track":"D1"}
+{"seq":4,"event":"submit","track":"D2"}
+{"seq":5,"event":"register","exp":"E1"}
+{"seq":6,"event":"result","exp":"E1"}
+{"seq":7,"event":"synthesis"}

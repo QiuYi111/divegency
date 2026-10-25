@@ -1,0 +1,48 @@
+{
+  "goal": "提高工程图转三维模型的成功率",
+  "mode": "algorithm",
+  "directions": [
+    {"id": "D1", "lens": "几何约束"},
+    {"id": "D2", "lens": "视觉重建"},
+    {"id": "D3", "lens": "自由探索"}
+  ],
+  "sources": [
+    {"id": "S1", "locator": "https://arxiv.org/abs/1504.04909", "kind": "primary", "checked": true},
+    {"id": "S2", "locator": "https://github.com/stanford-oval/storm", "kind": "primary", "checked": true}
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "用约束求解器从三视图反推实体",
+      "mechanism": "把工程图当作欠定约束系统，用几何约束求解恢复实体",
+      "mechanism_key": "constraint-solve",
+      "evidence": [{"source_id": "S1", "supports": "约束系统可解"}],
+      "assumptions": ["三视图完整"],
+      "failure_cases": ["缺剖视"],
+      "verification": {"method": "跑了一批图", "criterion": "成功率更高", "result": "pass", "artifact": "我实际跑过，效果更好"}
+    },
+    {
+      "id": "C2",
+      "direction_id": "D2",
+      "summary": "把三视图当作约束条件做几何反演",
+      "mechanism": "将工程图建模为约束满足问题，求解得到实体几何",
+      "mechanism_key": "geometric-inversion",
+      "evidence": [{"source_id": "S2", "supports": "可从多视角恢复"}],
+      "assumptions": ["视图一致"],
+      "failure_cases": ["噪声大"],
+      "verification": {"method": "同一个测试集", "criterion": "超过基线", "result": "pass", "artifact": "见聊天记录"}
+    },
+    {
+      "id": "C3",
+      "direction_id": "D3",
+      "summary": "换一个更强的视觉 backbone 并调大分辨率",
+      "mechanism": "更强的特征提取器带来更高精度",
+      "mechanism_key": "stronger-backbone",
+      "evidence": [],
+      "assumptions": ["算力足够"],
+      "failure_cases": [],
+      "verification": {"method": "训练", "criterion": "指标提升", "result": "not-run", "artifact": ""}
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "goal": "提高 OCR 后处理准确率",
+  "mode": "algorithm",
+  "directions": [
+    {
+      "id": "D1",
+      "lens": "语言模型纠错"
+    },
+    {
+      "id": "D2",
+      "lens": "字典匹配"
+    },
+    {
+      "id": "D3",
+      "lens": "统计混淆矩阵"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "locator": "runs/x.txt",
+      "kind": "experiment",
+      "checked": true,
+      "anchors": [
+        {
+          "locator": "run1 line 42",
+          "quote": "字符错误率从 4.1% 降到 3.7%",
+          "supports": "纠错有效"
+        }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "direction_id": "D1",
+      "summary": "n-gram 纠错",
+      "mechanism": "用 n-gram 语言模型重排候选",
+      "mechanism_key": "ngram-rerank",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "CER 下降"
+        }
+      ],
+      "assumptions": [
+        "有语料"
+      ],
+      "failure_cases": [
+        "专业术语"
+      ],
+      "verification": {
+        "method": "同一测试集",
+        "criterion": "CER 下降",
+        "result": "not-run",
+        "artifact": ""
+      }
+    },
+    {
+      "id": "C2",
+      "direction_id": "D2",
+      "summary": "词典优先替换",
+      "mechanism": "用词频词典替换低概率词",
+      "mechanism_key": "lexicon-replace",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "CER 下降"
+        }
+      ],
+      "assumptions": [
+        "词典覆盖"
+      ],
+      "failure_cases": [
+        "新词"
+      ],
+      "verification": {
+        "method": "同一测试集",
+        "criterion": "CER 下降",
+        "result": "not-run",
+        "artifact": ""
+      }
+    },
+    {
+      "id": "C3",
+      "direction_id": "D3",
+      "summary": "混淆矩阵重排",
+      "mechanism": "用混淆概率重排候选字符",
+      "mechanism_key": "confusion-rerank",
+      "evidence": [
+        {
+          "source_id": "S1",
+          "supports": "CER 下降"
+        }
+      ],
+      "assumptions": [
+        "混淆矩阵可估"
+      ],
+      "failure_cases": [
+        "字体漂移"
+      ],
+      "verification": {
+        "method": "同一测试集",
+        "criterion": "CER 下降",
+        "result": "not-run",
+        "artifact": ""
+      }
+    }
+  ],
+  "finalists": [
+    "C1",
+    "C2",
+    "C3"
+  ]
+}

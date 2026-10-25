@@ -1,0 +1,71 @@
+{
+ "goal": "为小 FastAPI 服务选择 JWT 库：python-jose vs PyJWT",
+ "mode": "decision",
+ "budget": "quick",
+ "probes": [
+  {
+   "id": "P1",
+   "intervention": "删掉 wheelhouse 的 cryptography 与 gcc",
+   "question": "两库能否离线安装"
+  },
+  {
+   "id": "P2",
+   "intervention": "同一份 DER 公钥伪造 HS256 token",
+   "question": "两库 decode 接受还是拒绝"
+  }
+ ],
+ "directions": [
+  {
+   "id": "D1",
+   "lens": "从供应链与维护风险出发",
+   "axis": "信息来源"
+  }
+ ],
+ "sources": [
+  {
+   "id": "S1",
+   "locator": "https://github.com/advisories/GHSA-3qf3-8w2g-rqmx",
+   "kind": "primary",
+   "checked": true,
+   "where": "§9.9 并不存在的章节",
+   "quote": "这是一段我编造的引文用来测试脚本"
+  }
+ ],
+ "candidates": [
+  {
+   "id": "C1",
+   "direction_id": "D1",
+   "summary": "换 PyJWT",
+   "mechanism": "去掉 ecdsa/rsa/pyasn1 链并锁 algorithms",
+   "mechanism_key": "dep-tree",
+   "predictions": {
+    "P1": "unknown",
+    "P2": "down"
+   },
+   "evidence": [
+    {
+     "source_id": "S1",
+     "supports": "未修 critical",
+     "where": "§9.9"
+    }
+   ],
+   "assumptions": [
+    "公钥以 PEM 注入"
+   ],
+   "failure_cases": [
+    "DER 注入时仍可伪造"
+   ],
+   "verification": {
+    "method": "probe_p2.py",
+    "criterion": "伪造 token 被拒",
+    "result": "pass",
+    "artifact": "probe_p2.out",
+    "evaluator": "self",
+    "rerun": ".venv/bin/python probe_p2.py"
+   }
+  }
+ ],
+ "finalists": [
+  "C1"
+ ]
+}

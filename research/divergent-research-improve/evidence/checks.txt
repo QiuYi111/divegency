@@ -1,0 +1,46 @@
+# E1 unit tests 2026-10-25T11:53:23Z
+Ran 17 tests in 0.003s
+
+OK
+
+# E2 old vs new checker on three fake portfolios
+== f1_rename.json
+old exit=0
+new exit=2
+new errors: 11
+== f2_tbd.json
+old exit=0
+new exit=2
+new errors: 7
+== f3_single_source.json
+old exit=0
+new exit=2
+new errors: 7
+
+# E3 adversarial variants from review round V2 (hardened checker)
+mutant_hardened.json exit=2
+  strict=2
+mutant_identical_witness.json exit=2
+  strict=2
+mutant_no_prediction_fields.json exit=2
+  strict=2
+mutant_no_predictions.json exit=2
+  strict=2
+portfolio.json exit=2
+  strict=2
+variant_b_url_artifact.json exit=2
+  strict=2
+variant_c_nothing_run.json exit=2
+  strict=2
+variant_d_underbudget.json exit=2
+  strict=2
+
+# E4 research portfolio self-check
+distinct_prediction_signatures: 5
+dead_ends: 5
+提醒：C1: 自测通过；措辞不得写“已证明优于基线”
+提醒：C2: 自测通过；措辞不得写“已证明优于基线”
+提醒：C3: 自测通过；措辞不得写“已证明优于基线”
+提醒：方向无候选：D6
+提醒：C1, C2, C3 共用同一 artifact（/Users/jingyi/divegency/research/divergent-research-improve/evidence/checks.txt）：一次运行不能同时证明多个候选
+结构检查通过；并不代表引用、原理和测试结果真实或正确。
