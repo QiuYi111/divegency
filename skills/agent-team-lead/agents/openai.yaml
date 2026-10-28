@@ -1,0 +1,4 @@
+interface:
+  display_name: "当总指挥"
+  short_description: "组织大批 worker 赛跑、起草、筛查盲点、合并，逐份核验，用审核表让决策者拍板"
+  default_prompt: "用 $agent-team-lead 组织一批 worker 完成这个项目：拆任务、开赛跑或起草、核验产物，再给我一张审核表。"
